@@ -57,6 +57,23 @@
             display: grid;
             grid-template-columns: repeat(7, minmax(0, 1fr));
         }
+        .draggable-row {
+            cursor: grab;
+            user-select: none;
+        }
+        .draggable-row:active {
+            cursor: grabbing;
+        }
+        .dragging {
+            opacity: 0.4;
+            background: #e2e8f0 !important;
+        }
+        .drag-over-top {
+            border-top: 3px solid #0056B3 !important;
+        }
+        .drag-over-bottom {
+            border-bottom: 3px solid #0056B3 !important;
+        }
     </style>
 </head>
 <body class="text-slate-800 antialiased min-h-screen flex flex-col">
@@ -71,7 +88,7 @@
                 <div>
                     <h1 class="font-bold text-base sm:text-lg tracking-tight leading-snug flex items-center gap-2">
                         ระบบติดตามรอบการส่งงาน NT
-                        <span class="bg-blue-900/80 text-nt-yellow text-[11px] px-2 py-0.5 rounded-md font-normal border border-nt-yellow/30">v2.0 Dashboard</span>
+                        <span class="bg-blue-900/80 text-nt-yellow text-[11px] px-2 py-0.5 rounded-md font-normal border border-nt-yellow/30">Drag & Drop Ready</span>
                     </h1>
                     <p class="text-xs text-slate-300 hidden sm:block">คำนวณวันส่งงานหน่วยย่อย NT (ไม่เกิน 5 วัน) และหน่วยงานใหญ่ (ไม่เกิน 7 วัน)</p>
                 </div>
@@ -80,7 +97,7 @@
             <!-- Header Quick Actions -->
             <div class="flex items-center space-x-2">
                 <button onclick="exportData()" class="bg-white/10 hover:bg-white/20 text-white text-xs px-3 py-2 rounded-xl flex items-center space-x-1.5 transition border border-white/10">
-                    <i data-lucide="file-spread-sheet" class="w-4 h-4 text-emerald-400"></i>
+                    <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-400"></i>
                     <span>ส่งออก Excel/CSV</span>
                 </button>
                 <button onclick="confirmClearAll()" class="bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 text-xs px-3 py-2 rounded-xl flex items-center space-x-1.5 transition border border-rose-500/30">
@@ -276,10 +293,10 @@
                     <div class="mt-4 p-4 bg-slate-900 text-white rounded-xl space-y-2 text-xs">
                         <div class="font-semibold text-nt-yellow flex items-center space-x-1.5">
                             <i data-lucide="info" class="w-4 h-4"></i>
-                            <span>คำอธิบายเกณฑ์เงื่อนไขเวลา:</span>
+                            <span>คำอธิบายเกณฑ์เงื่อนไขเวลา & วิธีใช้งาน:</span>
                         </div>
                         <p class="text-slate-300 leading-relaxed">
-                            ระบบจะกำหนดวันเริ่มต้นที่เลือกเป็น <strong class="text-white">วันที่ 1</strong> เสมอ โดยเมื่อนับไป <strong class="text-white">5 วัน</strong> จะต้องส่งมอบให้หน่วยงานย่อย (NT) และจะมีระยะเวลาดำเนินการส่งต่ออีก <strong class="text-white">2 วัน</strong> เพื่อให้ถึงหน่วยงานใหญ่รวมเวลาทั้งสิ้นไม่เกิน <strong class="text-white">7 วัน</strong>
+                            💡 <strong>วิธีการจัดลำดับงาน (Drag & Drop):</strong> คลิกค้างที่ไอคอนจับย้าย <code class="bg-slate-800 px-1.5 py-0.5 rounded text-nt-yellow font-mono">⋮⋮</code> ที่คอลัมน์แรกของแถวตารางงาน แล้วลากสลับขึ้น-ลงไปวางตำแหน่งใหม่ที่ต้องการได้ทันที ระบบจะบันทึกลำดับให้อัตโนมัติ!
                         </p>
                     </div>
                 </div>
@@ -298,7 +315,7 @@
                     <button id="tabTableView" onclick="switchMainView('table')" 
                         class="px-3.5 py-2 rounded-xl text-xs font-bold flex items-center space-x-2 transition bg-nt-blue text-white shadow-sm">
                         <i data-lucide="table" class="w-4 h-4"></i>
-                        <span>ตารางติดตามงาน</span>
+                        <span>ตารางติดตามงาน (ลากสลับแถวได้)</span>
                     </button>
                     <button id="tabCalendarView" onclick="switchMainView('calendar')" 
                         class="px-3.5 py-2 rounded-xl text-xs font-bold flex items-center space-x-2 transition bg-slate-200/70 text-slate-700 hover:bg-slate-200">
@@ -330,6 +347,7 @@
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-slate-100/80 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                            <th class="py-3.5 px-3 text-center w-12">ย้าย</th>
                             <th class="py-3.5 px-4">ชื่องาน / รายละเอียด</th>
                             <th class="py-3.5 px-4">เริ่มงาน (Day 1)</th>
                             <th class="py-3.5 px-4">ส่ง NT หน่วยย่อย (Day 5)</th>
@@ -340,7 +358,7 @@
                         </tr>
                     </thead>
                     <tbody id="taskTableBody" class="divide-y divide-slate-100 text-xs sm:text-sm">
-                        <!-- Dynamic Rows -->
+                        <!-- Dynamic Drag & Drop Rows -->
                     </tbody>
                 </table>
 
@@ -409,6 +427,74 @@
 
     </main>
 
+    <!-- Modal: Edit Task -->
+    <div id="editModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 border border-slate-200 animate-in fade-in zoom-in duration-200">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div class="flex items-center space-x-2">
+                    <div class="p-2 bg-blue-50 text-nt-blue rounded-xl">
+                        <i data-lucide="edit-3" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="font-bold text-base text-slate-800">แก้ไขรายละเอียดงาน</h3>
+                </div>
+                <button onclick="closeEditModal()" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="editForm" onsubmit="handleEditSubmit(event)" class="space-y-3.5">
+                <input type="hidden" id="editTaskId">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">ชื่องาน / รหัสเอกสาร <span class="text-rose-500">*</span></label>
+                    <input type="text" id="editJobTitle" required class="w-full px-3.5 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-nt-blue outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">วันที่เริ่มงาน (Day 1) <span class="text-rose-500">*</span></label>
+                        <input type="date" id="editStartDate" required class="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-nt-blue outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">โหมดการนับวัน</label>
+                        <select id="editMode" class="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-nt-blue outline-none">
+                            <option value="calendar">นับทุกวันตามปฏิทิน</option>
+                            <option value="workdays">ข้ามวันเสาร์-อาทิตย์</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">ผู้รับผิดชอบ / แผนก</label>
+                        <input type="text" id="editOwner" class="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-nt-blue outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">สถานะงาน</label>
+                        <select id="editStatus" class="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-nt-blue outline-none">
+                            <option value="pending">กำลังดำเนินการ (Day 1)</option>
+                            <option value="sent_nt">ส่งถึง NT แล้ว</option>
+                            <option value="completed">เสร็จสิ้น (ถึงหน่วยใหญ่)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">หมายเหตุเพิ่มเติม</label>
+                    <input type="text" id="editNote" class="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-nt-blue outline-none">
+                </div>
+
+                <div class="flex items-center justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">
+                        ยกเลิก
+                    </button>
+                    <button type="submit" class="px-5 py-2 bg-nt-blue hover:bg-nt-darkBlue text-white text-xs font-semibold rounded-xl shadow transition">
+                        บันทึกการแก้ไข
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 mt-8 py-4 text-center text-xs text-slate-500">
         <div class="max-w-7xl mx-auto px-4">
@@ -431,23 +517,17 @@
         let currentMainView = 'table'; // 'table' or 'calendar'
         let tasks = [];
         let calendarDate = new Date();
+        let draggedIndex = null;
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Set Default Start Date to Today
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('startDate').value = today;
 
-            // Load Saved Local Storage
             loadTasksFromStorage();
-
-            // Calculate initial preview
             calculatePreviewDates();
-
-            // Icons
             lucide.createIcons();
         });
 
-        // Set Calculation Mode (Calendar Days vs Workdays)
         function setMode(mode) {
             calculationMode = mode;
             const btnCalendar = document.getElementById('modeCalendar');
@@ -469,13 +549,12 @@
             if (currentMainView === 'calendar') renderCalendar();
         }
 
-        // Add Target Days Engine
         function addTargetDays(startDateStr, totalDaysTarget, mode = calculationMode) {
             if (!startDateStr) return null;
             let currentDate = new Date(startDateStr);
             if (isNaN(currentDate.getTime())) return null;
 
-            let daysToAdd = totalDaysTarget - 1; // Day 1 counts as start date
+            let daysToAdd = totalDaysTarget - 1;
 
             if (mode === 'calendar') {
                 currentDate.setDate(currentDate.getDate() + daysToAdd);
@@ -485,7 +564,7 @@
                 while (added < daysToAdd) {
                     currentDate.setDate(currentDate.getDate() + 1);
                     const day = currentDate.getDay();
-                    if (day !== 0 && day !== 6) { // Exclude Sunday(0) and Saturday(6)
+                    if (day !== 0 && day !== 6) {
                         added++;
                     }
                 }
@@ -493,7 +572,6 @@
             }
         }
 
-        // Format Date Thai
         function formatDateThai(dateObj, showYear = true) {
             if (!dateObj) return '-';
             const options = { 
@@ -509,7 +587,6 @@
             return dateObj.toISOString().split('T')[0];
         }
 
-        // Update Live Preview Dates
         function calculatePreviewDates() {
             const startDateVal = document.getElementById('startDate').value;
             if (!startDateVal) return;
@@ -523,7 +600,6 @@
             document.getElementById('previewDateStep3').textContent = formatDateThai(day7);
         }
 
-        // Submit New Task
         function handleFormSubmit(e) {
             e.preventDefault();
 
@@ -538,8 +614,8 @@
                 return;
             }
 
-            const day5Date = addTargetDays(startDate, 5);
-            const day7Date = addTargetDays(startDate, 7);
+            const day5Date = addTargetDays(startDate, 5, calculationMode);
+            const day7Date = addTargetDays(startDate, 7, calculationMode);
 
             const newTask = {
                 id: Date.now().toString(),
@@ -559,13 +635,11 @@
             renderTasks();
             if (currentMainView === 'calendar') renderCalendar();
 
-            // Reset Form fields
             document.getElementById('jobTitle').value = '';
             document.getElementById('note').value = '';
             showToast('ลงทะเบียนติดตามงานเรียบร้อยแล้ว');
         }
 
-        // Status Update
         function updateStatus(id, newStatus) {
             const task = tasks.find(t => t.id === id);
             if (task) {
@@ -577,7 +651,6 @@
             }
         }
 
-        // Delete Task
         function deleteTask(id) {
             if (confirm('คุณต้องการลบรายการนี้ใช่หรือไม่?')) {
                 tasks = tasks.filter(t => t.id !== id);
@@ -588,7 +661,118 @@
             }
         }
 
-        // Remaining Days calculation
+        // Edit Modal functions
+        function openEditModal(id) {
+            const task = tasks.find(t => t.id === id);
+            if (!task) return;
+
+            document.getElementById('editTaskId').value = task.id;
+            document.getElementById('editJobTitle').value = task.title;
+            document.getElementById('editStartDate').value = task.startDate;
+            document.getElementById('editMode').value = task.mode || 'calendar';
+            document.getElementById('editOwner').value = task.owner;
+            document.getElementById('editStatus').value = task.status;
+            document.getElementById('editNote').value = task.note || '';
+
+            document.getElementById('editModal').classList.remove('hidden');
+            document.getElementById('editModal').classList.add('flex');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('flex');
+            document.getElementById('editModal').classList.add('hidden');
+        }
+
+        function handleEditSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('editTaskId').value;
+            const task = tasks.find(t => t.id === id);
+            if (!task) return;
+
+            const title = document.getElementById('editJobTitle').value.trim();
+            const startDate = document.getElementById('editStartDate').value;
+            const mode = document.getElementById('editMode').value;
+            const owner = document.getElementById('editOwner').value.trim() || 'ไม่ระบุ';
+            const status = document.getElementById('editStatus').value;
+            const note = document.getElementById('editNote').value.trim();
+
+            const day5Date = addTargetDays(startDate, 5, mode);
+            const day7Date = addTargetDays(startDate, 7, mode);
+
+            task.title = title;
+            task.startDate = startDate;
+            task.mode = mode;
+            task.ntDeadline = formatDateISO(day5Date);
+            task.mainDeadline = formatDateISO(day7Date);
+            task.owner = owner;
+            task.status = status;
+            task.note = note;
+
+            saveTasksToStorage();
+            renderTasks();
+            if (currentMainView === 'calendar') renderCalendar();
+            closeEditModal();
+            showToast('แก้ไขข้อมูลเรียบร้อยแล้ว');
+        }
+
+        // HTML5 Drag & Drop Reordering Handlers
+        function setupDragAndDrop(tr, index) {
+            tr.addEventListener('dragstart', (e) => {
+                draggedIndex = index;
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', index);
+                tr.classList.add('dragging');
+            });
+
+            tr.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                const rect = tr.getBoundingClientRect();
+                const offset = e.clientY - rect.top;
+                
+                tr.classList.remove('drag-over-top', 'drag-over-bottom');
+                if (offset < rect.height / 2) {
+                    tr.classList.add('drag-over-top');
+                } else {
+                    tr.classList.add('drag-over-bottom');
+                }
+            });
+
+            tr.addEventListener('dragleave', () => {
+                tr.classList.remove('drag-over-top', 'drag-over-bottom');
+            });
+
+            tr.addEventListener('drop', (e) => {
+                e.preventDefault();
+                tr.classList.remove('drag-over-top', 'drag-over-bottom');
+                
+                if (draggedIndex === null || draggedIndex === index) return;
+
+                const rect = tr.getBoundingClientRect();
+                const offset = e.clientY - rect.top;
+                let targetIndex = index;
+
+                if (offset >= rect.height / 2 && draggedIndex < index) {
+                    targetIndex = index;
+                } else if (offset < rect.height / 2 && draggedIndex > index) {
+                    targetIndex = index;
+                }
+
+                const movedTask = tasks.splice(draggedIndex, 1)[0];
+                tasks.splice(targetIndex, 0, movedTask);
+
+                draggedIndex = null;
+                saveTasksToStorage();
+                renderTasks();
+                showToast('สลับตำแหน่งแถวเรียบร้อยแล้ว');
+            });
+
+            tr.addEventListener('dragend', () => {
+                tr.classList.remove('dragging', 'drag-over-top', 'drag-over-bottom');
+                draggedIndex = null;
+            });
+        }
+
         function getRemainingInfo(task) {
             const today = new Date();
             today.setHours(0,0,0,0);
@@ -625,7 +809,6 @@
             }
         }
 
-        // Main Render Tasks Function
         function renderTasks() {
             const tbody = document.getElementById('taskTableBody');
             const emptyState = document.getElementById('emptyState');
@@ -651,13 +834,13 @@
                 else countPending++;
             });
 
-            // Update Stats
             document.getElementById('statTotal').textContent = countTotal;
             document.getElementById('statPending').textContent = countPending;
             document.getElementById('statCompleted').textContent = countCompleted;
             document.getElementById('statOverdue').textContent = countOverdue;
 
-            // Filter tasks
+            const isFilteredView = searchKeyword !== '' || filterStatus !== 'all';
+
             const filtered = tasks.filter(task => {
                 const matchesSearch = task.title.toLowerCase().includes(searchKeyword) || 
                                      task.owner.toLowerCase().includes(searchKeyword) ||
@@ -679,9 +862,15 @@
                 emptyState.classList.add('hidden');
             }
 
-            filtered.forEach(task => {
+            filtered.forEach((task) => {
+                const actualIndex = tasks.findIndex(t => t.id === task.id);
                 const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50/80 transition border-b border-slate-100';
+                tr.className = 'hover:bg-slate-50/80 transition border-b border-slate-100 draggable-row';
+                
+                if (!isFilteredView) {
+                    tr.setAttribute('draggable', 'true');
+                    setupDragAndDrop(tr, actualIndex);
+                }
 
                 const day1 = new Date(task.startDate);
                 const day5 = new Date(task.ntDeadline);
@@ -705,6 +894,12 @@
                 }
 
                 tr.innerHTML = `
+                    <td class="py-3.5 px-3 text-center text-slate-400 font-semibold cursor-grab" title="${isFilteredView ? 'การค้นหา/ตัวกรองเปิดอยู่ (สลับแถวได้เฉพาะโหมดปกติ)' : 'คลิกค้างแล้วลากเพื่อเปลี่ยนลำดับ'}">
+                        <div class="flex items-center justify-center space-x-0.5">
+                            <i data-lucide="grip-vertical" class="w-4 h-4 text-slate-400 hover:text-nt-blue"></i>
+                            <span class="text-xs text-slate-600 font-mono">${actualIndex + 1}</span>
+                        </div>
+                    </td>
                     <td class="py-3.5 px-4">
                         <div class="font-bold text-slate-800">${escapeHtml(task.title)}</div>
                         <div class="text-xs text-slate-500 mt-1 flex flex-wrap items-center gap-2">
@@ -740,15 +935,18 @@
                     <td class="py-3.5 px-4 text-right whitespace-nowrap">
                         <div class="flex items-center justify-end space-x-1">
                             ${task.status === 'pending' ? `
-                                <button onclick="updateStatus('${task.id}', 'sent_nt')" class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg text-xs font-semibold transition border border-amber-200" title="ปรับเป็น: ส่ง NT แล้ว">
+                                <button onclick="updateStatus('${task.id}', 'sent_nt')" class="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg text-xs font-semibold transition border border-amber-200" title="ส่ง NT แล้ว">
                                     ส่ง NT
                                 </button>
                             ` : ''}
                             ${task.status === 'sent_nt' ? `
-                                <button onclick="updateStatus('${task.id}', 'completed')" class="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-nt-blue rounded-lg text-xs font-semibold transition border border-blue-200" title="ปรับเป็น: ถึงหน่วยงานใหญ่แล้ว">
+                                <button onclick="updateStatus('${task.id}', 'completed')" class="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-nt-blue rounded-lg text-xs font-semibold transition border border-blue-200" title="ถึงหน่วยงานใหญ่แล้ว">
                                     ส่งหน่วยใหญ่
                                 </button>
                             ` : ''}
+                            <button onclick="openEditModal('${task.id}')" class="p-1.5 text-slate-400 hover:text-nt-blue hover:bg-blue-50 rounded-lg transition" title="แก้ไขรายการ">
+                                <i data-lucide="edit" class="w-4 h-4"></i>
+                            </button>
                             <button onclick="deleteTask('${task.id}')" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition" title="ลบรายการ">
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
@@ -762,7 +960,6 @@
             lucide.createIcons();
         }
 
-        // Switch Main View (Table vs Calendar)
         function switchMainView(view) {
             currentMainView = view;
             const viewTable = document.getElementById('viewTable');
@@ -784,7 +981,6 @@
             }
         }
 
-        // Render Calendar Logic
         function renderCalendar() {
             const grid = document.getElementById('calendarGrid');
             grid.innerHTML = '';
@@ -792,35 +988,30 @@
             const year = calendarDate.getFullYear();
             const month = calendarDate.getMonth();
 
-            // Set Header Month Year Thai
             const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
             document.getElementById('calendarMonthYear').textContent = `${monthNames[month]} ${year + 543}`;
 
             const firstDayIndex = new Date(year, month, 1).getDay();
             const lastDay = new Date(year, month + 1, 0).getDate();
 
-            // Empty cells before start of month
             for (let i = 0; i < firstDayIndex; i++) {
                 const emptyCell = document.createElement('div');
                 emptyCell.className = "bg-slate-50/50 min-h-[90px] p-1.5 text-slate-300 text-xs";
                 grid.appendChild(emptyCell);
             }
 
-            // Days cells
             for (let day = 1; day <= lastDay; day++) {
                 const dayCell = document.createElement('div');
                 dayCell.className = "bg-white min-h-[90px] p-1.5 text-xs flex flex-col justify-start space-y-1 hover:bg-slate-50 transition";
                 
                 const currentDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 
-                // Day number header
                 const dayNum = document.createElement('div');
                 const isToday = new Date().toISOString().split('T')[0] === currentDateStr;
                 dayNum.className = `font-bold text-xs w-5 h-5 flex items-center justify-center rounded-full mb-1 ${isToday ? 'bg-nt-blue text-white' : 'text-slate-700'}`;
                 dayNum.textContent = day;
                 dayCell.appendChild(dayNum);
 
-                // Check Events matching this day
                 tasks.forEach(task => {
                     if (task.startDate === currentDateStr) {
                         const tag = document.createElement('div');
@@ -864,17 +1055,15 @@
             renderCalendar();
         }
 
-        // Storage Management
         function saveTasksToStorage() {
-            localStorage.setItem('nt_tasks_data_v2', JSON.stringify(tasks));
+            localStorage.setItem('nt_tasks_data_v2_5', JSON.stringify(tasks));
         }
 
         function loadTasksFromStorage() {
-            const saved = localStorage.getItem('nt_tasks_data_v2');
+            const saved = localStorage.getItem('nt_tasks_data_v2_5');
             if (saved) {
                 try { tasks = JSON.parse(saved); } catch (e) { tasks = []; }
             } else {
-                // Default Demo Data
                 const todayISO = new Date().toISOString().split('T')[0];
                 tasks = [
                     {
@@ -895,7 +1084,6 @@
             renderTasks();
         }
 
-        // Export Data
         function exportData() {
             if (tasks.length === 0) {
                 showToast('ไม่มีข้อมูลสำหรับส่งออก');
